@@ -189,15 +189,14 @@ class Job:
             accuracies.append(accuracy)
 
         # DEBUG
-        print(f"accuracies: {accuracies}")
+        print(f"Computed Accuracies: {accuracies}")
 
         # The latest items are the most preferred ones
         # The instanciated config is the reference one (most truthful)
         # We want to take the latest one that is above the threshold.
         for i in range(len(accuracies) - 1, -1, -1):
-            print("in for loop")
             if accuracies[i] >= accuracy_threshold:
-                logger.info(
+                print(
                     f"Found a less costly config with accuracy of {accuracies[i]}. Swapping to it."
                 )
                 # This configuration becames the default configuration

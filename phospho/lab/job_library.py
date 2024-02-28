@@ -248,15 +248,15 @@ def sync_event_detection(
     message: Message,
     event_name: str,
     event_description: str,
-    model_id: str = "openai:gpt-3.5-turbo",
+    model: str = "openai:gpt-3.5-turbo",
 ) -> JobResult:
     """
     Detects if an event is present in a message.
     """
-    llm = language_model_from_id(model_id)
+    llm = language_model_from_id(model)
     assert (
         llm is not None
-    ), "Language model not found. Are you sure the model_id is correct?"
+    ), "Language model not found. Are you sure the model is correct?"
     async_openai_client = openai.AsyncClient()
 
     # Build the prompt
@@ -336,7 +336,7 @@ You have to say if the event is present in the transcript or not. Respond with o
         detected_event = None
 
     # Identifier of the source of the evaluation, with the version of the model if phospho
-    evaluation_source = f"phospho-4-{model_id}"
+    evaluation_source = f"phospho-4-{model}"
 
     # TODO : Make it so that this works again
     # Store the query and the response in the database
