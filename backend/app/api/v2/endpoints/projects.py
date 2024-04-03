@@ -1,8 +1,11 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
+from loguru import logger
 
 from app.api.v2.models import (
+    Project,
+    ProjectUpdateRequest,
     ProjectTasksFilter,
     Sessions,
     Tasks,
@@ -12,13 +15,58 @@ from app.api.v2.models import (
 
 # from app.db.client import firestore_db as firestore_db
 from app.security import authenticate_org_key, verify_propelauth_org_owns_project_id
-from app.services.mongo.projects import get_all_sessions, get_all_tasks
+from app.services.mongo.projects import (
+    get_all_sessions,
+    get_all_tasks,
+    get_project_by_id,
+    update_project,
+)
 from app.services.mongo.explore import (
     fetch_flattened_tasks,
     update_from_flattened_tasks,
 )
 
 router = APIRouter(tags=["Projects"])
+
+
+@router.get(
+    "/projects/{project_id}",
+    response_model=Project,
+    description="Get a specific project",
+)
+async def get_project(
+    project_id: str,
+    org: dict = Depends(authenticate_org_key),
+) -> Project:
+    """
+    Get a specific project
+    """
+    await verify_propelauth_org_owns_project_id(org, project_id)
+    project = await get_project_by_id(project_id)
+    return project
+
+
+@router.post(
+    "/projects/{project_id}",
+    response_model=Project,
+    description="Update a project. Only the fields that are specified in the request will be updated. Filed specified will be overwritten (WARNING for nested fields like settings))",
+)
+async def post_update_project(
+    project_id: str,
+    project_update_request: ProjectUpdateRequest,
+    org: dict = Depends(authenticate_org_key),
+) -> Project:
+    await verify_propelauth_org_owns_project_id(org, project_id)
+
+    project = await get_project_by_id(project_id)
+
+    updated_project = await update_project(
+        project, **project_update_request.model_dump()
+    )
+
+    logger.debug(f"Project {project_id} updated successfully.")
+
+    return updated_project
 
 
 @router.get(
